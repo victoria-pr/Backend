@@ -3,7 +3,7 @@ import connection from "../config/db.js";
 const getAll = (req, res) => {
     let sql = "SELECT game.name, game.datetime,game.idstadium, stadium.name as stadium_name, tournament.name as tournament_name \
     FROM game\
-    JOIN stadium ON game.idstadium = stadium = idstadium\
+    JOIN stadium ON game.idstadium = stadium.idstadium\
     JOIN tournament ON game.idtournament = tournament.idtournament";
     connection.query(sql, (err,result) => {
         if (err) throw err;
@@ -15,7 +15,7 @@ const getAll = (req, res) => {
 const getById = (req,res) => {
     let sql = "SELECT game.name, game.datetime,game.idstadium, stadium.name as stadium_name, tournament.name as tournament_name\
     FROM game\
-    JOIN stadium ON game.idstadium = stadium = idstadium\
+    JOIN stadium ON game.idstadium = stadium.idstadium\
     JOIN tournament ON game.idtournament = tournament.idtournament\
     WHERE idgame = ?";
     connection.query(sql, [req.params.id],(err,result) => {

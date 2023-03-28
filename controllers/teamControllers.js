@@ -11,10 +11,9 @@ const getAll = (req, res) => {
 };
 
 const getById = (req,res) => {
-    let sql = "SELECT team.name, team.creation_date,team.idstadium, player.name as player_name, stadium.name as stadium_name\
+    let sql = "SELECT team.name, team.creation_date,team.idstadium, stadium.name as stadium_name\
     FROM team\
-    JOIN stadium ON team.idstadium = stadium = idstadium\
-    JOIN player ON team.idteam = player.idteam\
+    JOIN stadium ON team.idstadium = stadium.idstadium\
     WHERE idteam = ?";
     connection.query(sql, [req.params.id],(err,result) => {
         if (err) throw err;
