@@ -1,6 +1,25 @@
 import connection from "../config/db.js";
+import Team from "../models/team.js";
 
-const getAll = (req, res) => {
+const getAll = async (req,res) => {
+    try{
+        let teams = await Team.findAll({
+            attributes: ["idteam","name","creation_date","idcaptain","idstadium"],
+            /* include: {
+                model: Team,
+                attributes: ["name"],
+                as: "team"
+            } */
+        });
+        res.send(teams);  
+    } catch (error) {
+        res.status(500).send({
+            message: error.message || "some error ocurred while retrieving players"
+        });
+    }
+};
+
+const getAll_old = (req, res) => {
     let sql = "SELECT team.name, team.creation_date,team.idstadium, stadium.name as stadium_name\
     FROM team\
     JOIN stadium ON team.idstadium = stadium.idstadium";
