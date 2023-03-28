@@ -1,4 +1,3 @@
-import connection from "../config/db.js";
 import Player from "../models/player.js";
 import Team from "../models/team.js";
 
@@ -40,7 +39,7 @@ const getById = async (req,res) => {
         }
     }catch (error) {
         res.status(500).send({
-            message:error.message || "Some error ocurred while retrieving players."
+            message:error.message || "Some error ocurred while retrieving player."
         });
     }
 };

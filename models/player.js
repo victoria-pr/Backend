@@ -42,5 +42,8 @@ Player.belongsTo(Team, {
 Team.hasMany(Player,{
     foreignKey: "idteam"
 });
-
+Team.belongsTo(Player,{
+    foreignKey: "idteam",
+    as: "captain"
+});
 export default Player;
