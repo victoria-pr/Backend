@@ -56,7 +56,7 @@ const create = async (req,res) => {
         let name = req.body.name;
         let address = req.body.address;
         let capacity = req.body.capacity;
-       
+    
         let stadium = await Stadium.create({
             "name": name, 
             "address":address,

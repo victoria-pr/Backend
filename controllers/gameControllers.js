@@ -1,63 +1,122 @@
-import connection from "../config/db.js";
+import Stadium from "../models/stadium.js";
+import Game from "../models/game.js";
+import Tournament from "../models/tournament.js";
 
-const getAll = (req, res) => {
-    let sql = "SELECT game.name, game.datetime,game.idstadium, stadium.name as stadium_name, tournament.name as tournament_name \
-    FROM game\
-    JOIN stadium ON game.idstadium = stadium.idstadium\
-    JOIN tournament ON game.idtournament = tournament.idtournament";
-    connection.query(sql, (err,result) => {
-        if (err) throw err;
-        res.send(result);
-    }); 
-    //return query
+const getAll = async (req,res) => {
+    try{
+        let games = await Game.findAll({
+            attributes: ["idgame","name","datetime","idstadium", "idtournament"],
+            include: [
+                {model: Stadium,
+                attributes: ["name", "idstadium"],
+                as: "stadium"},
+                {model: Tournament,
+                attributes: ["name", "idtournament"],
+                as: "tournament"}
+            ]
+        });
+        res.send(games);  
+    } catch (error) {
+        res.status(500).send({
+            message: error.message || "some error ocurred while retrieving games"
+        });
+    }
 };
 
-const getById = (req,res) => {
-    let sql = "SELECT game.name, game.datetime,game.idstadium, stadium.name as stadium_name, tournament.name as tournament_name\
-    FROM game\
-    JOIN stadium ON game.idstadium = stadium.idstadium\
-    JOIN tournament ON game.idtournament = tournament.idtournament\
-    WHERE idgame = ?";
-    connection.query(sql, [req.params.id],(err,result) => {
-        if (err) throw err;
-        res.send(result);
-    });
+const getById = async (req,res) => {
+    try{
+        let id = req.params.id;
+        let game = await Game.findByPk(id,{
+            attributes: ["idgame","name","datetime","idstadium", "idtournament"],
+            include: [
+                {model: Stadium,
+                attributes: ["name", "idstadium"],
+                as: "stadium"},
+                {model: Tournament,
+                attributes: ["name", "idtournament"],
+                as: "tournament"}
+            ]
+        });
+        if (!game) {
+            res.status(404).send({
+                message: `Cannot find game with id=${id}.`
+            });
+        }else{
+            res.send(game);
+        }
+    }catch (error) {
+        res.status(500).send({
+            message:error.message || "Some error ocurred while retrieving game."
+        });
+    }
 };
 
-const create = (req,res) => {
-    let name = req.body.name;
-    let datetime = req.body.datetime;
-    let idstadium = req.body.idstadium;
-    let idtournament = req.body.idtournament;
-    let sql = "INSERT INTO game (name,datetime,idstadium,idtournament) \
-    VALUES (?,?,?,?)";
-    connection.query(sql, [name,datetime,idstadium,idtournament],(err,result) => {
-        if (err) throw err;
-        res.send(result);
-    });
+const create = async (req,res) => {
+    try{ 
+        let name = req.body.name;
+        let datetime = req.body.datetime;
+        let idstadium = req.body.idstadium;
+        let idtournament = req.body.idtournament;
+        let game = await Game.create({
+            "name":name, 
+            "datetime":datetime,
+            "idstadium":idstadium,
+            "idtournament":idtournament,});
+        res.send(game);
+    }catch (error){
+        res.status(500).send({
+            message:error.message || "Some error ocurred while creating game."
+      });
+    }
+};
+
+const update = async (req,res) => {
+    try{
+        let name = req.body.name;
+        let datetime = req.body.datetime;
+        let idstadium = req.body.idstadium;
+        let idtournament = req.body.idtournament;
+        let idgame = req.params.id;
+
+        let game = await Game.update ({
+            "name":name, 
+            "datetime":datetime,
+            "idstadium":idstadium,
+            "idtournament":idtournament},{
+                where: {
+                    idgame: idgame
+                }
+        });
+        res.send(game);
+    }catch (error){
+        res.status(500).send({
+            message:error.message || "Some error ocurred while updating games."
+      });
+    }
 }
 
-const update = (req,res) => {
-    let name = req.body.name;
-    let datetime = req.body.datetime;
-    let idstadium = req.body.idstadium;
-    let idtournament = req.body.idtournament;
-    let sql = "UPDATE game\
-    SET name= ?,datetime = ?,idstadium=?,idtournament = ?\
-    WHERE idgame = ?";
-    connection.query(sql, [name,datetime,idstadium,idtournament],(err,result) => {
-        if (err) throw err;
-        res.send(result);
-    });
-}
-
-const deletes = (req,res) => {
-    let idgame = req.params.id;
-    let sql = "DELETE FROM game WHERE idgame = ?";
-    connection.query(sql, [idgame],(err,result) => {
-        if (err) throw err;
-        res.send(result);
-    });
+const deletes = async (req,res) => {
+    try{
+        let idgame = req.params.id;
+        let game = await Game.destroy({
+            where: {
+                idgame : idgame
+            } 
+        });
+        console.log(game);
+        if (game === 0){
+            res.status(404).send({
+                message: `Game with id=${idgame} not found.`
+            });
+        } 
+        else{
+            res.send("game deleted");
+        }
+    }catch (error){
+        res.status(500).send({
+            message:error.message || "Some error ocurred while deleting Games."
+        });
+    }
 }
 
 export default {

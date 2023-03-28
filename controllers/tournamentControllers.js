@@ -1,56 +1,105 @@
-import connection from "../config/db.js";
+import Stadium from "../models/stadium.js";
+import Game from "../models/game.js";
+import Tournament from "../models/tournament.js";
 
-const getAll = (req, res) => {
-    let sql = "SELECT *\
-    FROM tournament\
-    JOIN game ON game.idtournament = tournament.idtournament\
-    JOIN stadium ON game.idstadium = stadium.idstadium";
-    connection.query(sql, (err,result) => {
-        if (err) throw err;
-        res.send(result);
-    }); 
+const getAll = async (req,res) => {
+    try{
+        let tournaments = await Tournament.findAll({
+            attributes: ["idtournament", "name"],
+            include:{
+                model: Game,
+                attributes: ["name", "idgame"],
+                as: "games"
+            }
+        });
+        res.send(tournaments);  
+    } catch (error) {
+        res.status(500).send({
+            message: error.message || "some error ocurred while retrieving tournament"
+        });
+    }
 };
 
-const getById = (req,res) => {
-    let sql = "SELECT *\
-    FROM tournament as tour\
-    JOIN game ON game.idtournament = tour.idtournament\
-    JOIN stadium ON game.idstadium = stadium.idstadium\
-    WHERE tour.idtournament = ?";
-    connection.query(sql, [req.params.id],(err,result) => {
-        if (err) throw err;
-        res.send(result);
-    });
+const getById = async (req,res) => {
+    try{
+        let id = req.params.id;
+        let tournament = await Tournament.findByPk(id,{
+            attributes: ["idtournament", "name"],
+            include: {
+                model: Game,
+                attributes: ["name", "idgame"],
+                as: "games"
+            }
+        });
+        if (!tournament) {
+            res.status(404).send({
+                message: `Cannot find tournament with id=${id}.`
+            });
+        }else{
+            res.send(tournament);
+        }
+    }catch (error) {
+        res.status(500).send({
+            message:error.message || "Some error ocurred while retrieving tournament."
+        });
+    }
 };
 
-const create = (req,res) => {
-    let name = req.body.name;
-    let sql = "INSERT INTO tournament (name) \
-    VALUES (?)";
-    connection.query(sql, [name],(err,result) => {
-        if (err) throw err;
-        res.send(result);
-    });
+const create = async (req,res) => {
+    try{ 
+        let name = req.body.name;
+       
+        let tournament = await Tournament.create({
+            "name":name,});
+        res.send(tournament);
+    }catch (error){
+        res.status(500).send({
+            message:error.message || "Some error ocurred while creating tournament."
+      });
+    }
+};
+
+const update = async (req,res) => {
+    try{
+        let name = req.body.name;
+        let idtournament = req.params.id;
+
+        let tournament = await Tournament.update ({
+            "name":name},{
+                where: {
+                    idtournament: idtournament
+                }
+        });
+        res.send(tournament);
+    }catch (error){
+        res.status(500).send({
+            message:error.message || "Some error ocurred while updating tournaments."
+      });
+    }
 }
 
-const update = (req,res) => {
-    let name = req.body.name;
-    let sql = "UPDATE tournament\
-    SET name= ?\
-    WHERE idtournament = ?";
-    connection.query(sql, [name],(err,result) => {
-        if (err) throw err;
-        res.send(result);
-    });
-}
-
-const deletes = (req,res) => {
-    let idtournament = req.params.id;
-    let sql = "DELETE FROM tournament WHERE idtournament = ?";
-    connection.query(sql, [idtournament],(err,result) => {
-        if (err) throw err;
-        res.send(result);
-    });
+const deletes = async (req,res) => {
+    try{
+        let idtournament = req.params.id;
+        let tournament = await Tournament.destroy({
+            where: {
+                idtournament : idtournament
+            } 
+        });
+        console.log(tournament);
+        if (tournament === 0){
+            res.status(404).send({
+                message: `Tournament with id=${idtournament} not found.`
+            });
+        } 
+        else{
+            res.send("tournament deleted");
+        }
+    }catch (error){
+        res.status(500).send({
+            message:error.message || "Some error ocurred while deleting Tournament."
+        });
+    }
 }
 
 export default {
